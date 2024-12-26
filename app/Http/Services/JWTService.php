@@ -60,11 +60,11 @@ class JWTService
      * @param string $rsaPath [Path where RSA public and private keys are
      * defined]
      *
-     * @return array|object|string
+     * @return array<string, string>
      */
-    public function getTokenData(string $rsaPath): array|object|string
+    public function getTokenData(string $rsaPath): array
     {
-        return $this->decode($rsaPath)->data;
+        return (array) $this->decode($rsaPath)->data;
     }
 
     /**
@@ -88,7 +88,7 @@ class JWTService
      *
      * @return stdClass
      */
-    public function decode(string $rsaPath, ?string $jwt = NULL_VALUE): stdClass
+    public function decode(string $rsaPath, ?string $jwt = null): stdClass
     {
         return $this->jwt
             ->config([
@@ -97,7 +97,7 @@ class JWTService
                     ->init()
                     ->getPublicKey()
             ])
-            ->decode(NULL_VALUE === $jwt ? jwt() : $jwt)
+            ->decode(null === $jwt ? jwt() : $jwt)
             ->get();
     }
 }

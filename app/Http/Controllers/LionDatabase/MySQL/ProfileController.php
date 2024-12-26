@@ -14,7 +14,6 @@ use App\Rules\LionDatabase\MySQL\Users\UsersLastNameRequiredRule;
 use App\Rules\LionDatabase\MySQL\Users\UsersNameRequiredRule;
 use App\Rules\LionDatabase\MySQL\Users\UsersNicknameRequiredRule;
 use Database\Class\LionDatabase\MySQL\Users;
-use Lion\Database\Interface\DatabaseCapsuleInterface;
 use Lion\Request\Http;
 use Lion\Request\Status;
 use Lion\Route\Attributes\Rules;
@@ -37,17 +36,21 @@ class ProfileController
      * @param JWTService $jWTService [Service to manipulate JWT tokens]
      * @param AESService $aESService [Encrypt and decrypt data with AES]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass
      */
     public function readProfile(
         Users $users,
         ProfileModel $profileModel,
         JWTService $jWTService,
         AESService $aESService
-    ): stdClass|array|DatabaseCapsuleInterface {
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+    ): stdClass {
+        $data = [];
 
-        $decode = $aESService->decode(['idusers' => $data->idusers]);
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
+
+        $decode = $aESService->decode(['idusers' => $data['idusers']]);
 
         return $profileModel->readProfileDB(
             $users
@@ -82,9 +85,13 @@ class ProfileController
         JWTService $jWTService,
         AESService $aESService
     ): stdClass {
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        $data = [];
 
-        $decode = $aESService->decode(['idusers' => $data->idusers]);
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
+
+        $decode = $aESService->decode(['idusers' => $data['idusers']]);
 
         $response = $profileModel->updateProfileDB(
             $users

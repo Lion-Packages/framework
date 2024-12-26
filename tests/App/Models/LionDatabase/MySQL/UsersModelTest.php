@@ -46,7 +46,6 @@ class UsersModelTest extends Test
     {
         $response = $this->usersModel->createUsersDB($this->users);
 
-        $this->assertIsObject($response);
         $this->assertInstanceOf(stdClass::class, $response);
         $this->assertObjectHasProperty('code', $response);
         $this->assertObjectHasProperty('status', $response);

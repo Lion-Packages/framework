@@ -21,7 +21,7 @@ class ProfileModel
      *
      * @param Users $users [Capsule for the 'Users' entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function readProfileDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {

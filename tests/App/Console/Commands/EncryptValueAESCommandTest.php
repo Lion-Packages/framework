@@ -42,19 +42,12 @@ class EncryptValueAESCommandTest extends Test
     {
         $code = uniqid();
 
-        $this->assertSame(Command::SUCCESS, $this->commandTester->setInputs([$code])->execute([]));
+        $this->assertSame(Command::SUCCESS, $this->commandTester->execute(['string' => $code]));
 
         $encode = $this->aESService->encode([
             'code' => $code,
         ]);
 
         $this->assertStringContainsString($encode['code'], $this->commandTester->getDisplay());
-    }
-
-    #[Testing]
-    public function executeWithEmptyValue(): void
-    {
-        $this->assertSame(Command::INVALID, $this->commandTester->setInputs([""])->execute([]));
-        $this->assertStringContainsString('you must enter a value for encryption', $this->commandTester->getDisplay());
     }
 }

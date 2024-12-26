@@ -74,7 +74,7 @@ class AuthenticatorService
         /** @var DatabaseCapsuleInterface|Users $capsule */
         $capsule = $this->authenticatorModel->readUsersPasswordDB($users);
 
-        if (!password_verify($users->getUsersPassword(), $capsule->getUsersPassword())) {
+        if ($capsule instanceof Users && !password_verify($users->getUsersPassword(), $capsule->getUsersPassword())) {
             throw new PasswordException('password is invalid');
         }
     }

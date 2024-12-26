@@ -7,6 +7,7 @@ namespace Tests\Providers;
 use App\Http\Services\AESService;
 use Lion\Bundle\Helpers\Commands\ProcessCommand;
 use Lion\Security\AES;
+use Lion\Security\Exceptions\AESException;
 use Lion\Security\JWT;
 use Lion\Security\RSA;
 
@@ -25,9 +26,11 @@ trait AuthJwtProviderTrait
      *
      * @param array<string, string> $rows [List of data to encrypt]
      *
-     * @return array|object
+     * @return array<string, string>
+     *
+     * @throws AESException
      */
-    private function AESEncode(array $rows): array|object
+    private function AESEncode(array $rows): array
     {
         return (new AESService())
             ->setAES(new AES())
@@ -39,15 +42,22 @@ trait AuthJwtProviderTrait
      *
      * @param array<string, string> $rows [List of data to decrypt]
      *
-     * @return array|object
+     * @return array<string, string>
      */
-    private function AESDecode(array $rows): array|object
+    private function AESDecode(array $rows): array
     {
         return (new AESService())
             ->setAES(new AES())
             ->decode($rows);
     }
 
+    /**
+     * Generate a valid authentication token
+     *
+     * @param array<string, mixed> $data [Token data]
+     *
+     * @return string
+     */
     private function getAuthorization(array $data = []): string
     {
         $token = (new JWT())
@@ -66,6 +76,14 @@ trait AuthJwtProviderTrait
         return "Bearer {$token}";
     }
 
+    /**
+     * Generate a valid authentication token with a public and private key
+     *
+     * @param string $path [Public and private key location]
+     * @param array<string, mixed> $data [Token data]
+     *
+     * @return string
+     */
     private function getCustomAuthorization(string $path, array $data = []): string
     {
         $token = (new JWT())
@@ -78,7 +96,7 @@ trait AuthJwtProviderTrait
             ->encode([
                 'session' => true,
                 ...$data
-            ], (int) env('JWT_EXP', 3600))
+            ], (int) env('JWT_EXP'))
             ->get();
 
         return "Bearer {$token}";

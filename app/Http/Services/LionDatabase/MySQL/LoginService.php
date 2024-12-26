@@ -141,6 +141,7 @@ class LoginService
      */
     public function validateSession(Users $users): void
     {
+        /** @var stdClass $auth */
         $auth = $this->loginModel->authDB($users);
 
         if ($auth->count === 0 || $auth->count === "0") {
@@ -166,7 +167,7 @@ class LoginService
         /** @var stdClass $users_activation_code */
         $users_activation_code = $this->loginModel->verifyAccountActivationDB($users);
 
-        if (NULL_VALUE != $users_activation_code->users_activation_code) {
+        if (null != $users_activation_code->users_activation_code) {
             throw new AuthenticationException(
                 "the user's account has not yet been verified",
                 Status::SESSION_ERROR,
@@ -181,9 +182,9 @@ class LoginService
      * @param string|int $time [Token useful life]
      * @param array<string, mixed> $data [Data that is added to the JWT token]
      *
-     * @return string
+     * @return array<string, mixed>|object|string
      */
-    public function getToken(string|int $time, array $data): string
+    public function getToken(string|int $time, array $data): array|object|string
     {
         return $this->jwt
             ->config([

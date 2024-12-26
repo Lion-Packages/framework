@@ -53,7 +53,7 @@ class AccountService
      */
     public function checkRecoveryCodeInactive(Users $users): void
     {
-        if (NULL_VALUE != $users->getUsersRecoveryCode()) {
+        if (null != $users->getUsersRecoveryCode()) {
             throw new AccountException(
                 'a verification code has already been sent to this account',
                 Status::ERROR,
@@ -67,7 +67,6 @@ class AccountService
      *
      * @param RecoveryAccountHtml $recoveryAccountHtml [Password recovery
      * template]
-     * @param array $queue [List of stored data]
      * @param string $account [Mail account]
      * @param string $code [Code]
      *
@@ -77,7 +76,6 @@ class AccountService
      */
     public function runSendVerificationCodeEmail(
         RecoveryAccountHtml $recoveryAccountHtml,
-        array $queue,
         string $account,
         string $code
     ): bool {
@@ -98,8 +96,8 @@ class AccountService
     /**
      * Send emails for account validation
      *
-     * @param VerifyAccountHtml $verifyAccountHtml
-     * @param array $queue [List of stored data]
+     * @param VerifyAccountHtml $verifyAccountHtml [Account verification
+     * template]
      * @param string $account [Mail account]
      * @param string $code [Code]
      *
@@ -109,7 +107,6 @@ class AccountService
      */
     public function runSendRecoveryCodeByEmail(
         VerifyAccountHtml $verifyAccountHtml,
-        array $queue,
         string $account,
         string $code
     ): bool {

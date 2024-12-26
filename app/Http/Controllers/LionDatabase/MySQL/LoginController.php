@@ -73,8 +73,8 @@ class LoginController
         ]);
 
         $passwordManagerService->verifyPasswords(
-            $session->getUsersPassword(),
-            $users
+            (string) $session->getUsersPassword(),
+            (string) $users
                 ->setUsersPassword($decode['users_password'])
                 ->getUsersPassword(),
             'email/password is incorrect [AUTH-2]'
@@ -83,7 +83,7 @@ class LoginController
         $authenticator2FA = $authenticator2FA->setIdusers($session->getIdusers());
 
         if ($loginService->checkStatus2FA($authenticator2FA)) {
-            return warning(NULL_VALUE, Http::ACCEPTED);
+            return warning(null, Http::ACCEPTED);
         }
 
         return success('successfully authenticated user', Http::OK, [
@@ -134,7 +134,7 @@ class LoginController
             return error('2FA security is not active for this user', Http::FORBIDDEN);
         }
 
-        $authenticatorService->verify2FA($session->getUsers2faSecret(), $authenticator2FA);
+        $authenticatorService->verify2FA($session->getUsers2faSecret() ?? '', $authenticator2FA);
 
         return success('successfully authenticated user', Http::OK, [
             'auth_2fa' => true,
@@ -173,6 +173,7 @@ class LoginController
         AESService $aESService,
         JWTService $jWTService
     ): stdClass {
+        /** @var stdClass $data */
         $data = $jWTService->getToken()->data;
 
         $decode = $aESService->decode([

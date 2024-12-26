@@ -46,9 +46,9 @@ class UsersModel
     /**
      * Read users
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return array<array<int|string, mixed>|DatabaseCapsuleInterface|stdClass>|stdClass
      */
-    public function readUsersDB(): stdClass|array|DatabaseCapsuleInterface
+    public function readUsersDB(): array|stdClass
     {
         return DB::view('read_users')
             ->select()
@@ -60,7 +60,7 @@ class UsersModel
      *
      * @param Users $users [Object of the Users entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function readUsersByIdDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {
@@ -75,7 +75,7 @@ class UsersModel
      *
      * @param Users $users [Object of the Users entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function readUsersByEmailDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {
@@ -90,7 +90,7 @@ class UsersModel
      *
      * @param Users $users [Capsule for the 'Users' entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function readUsers2FADB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {

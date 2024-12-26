@@ -17,7 +17,6 @@ use Database\Class\Authenticator2FA;
 use Database\Class\LionDatabase\MySQL\Users;
 use Database\Factory\LionDatabase\MySQL\UsersFactory;
 use Lion\Authentication\Auth2FA;
-use Lion\Database\Interface\DatabaseCapsuleInterface;
 use Lion\Request\Http;
 use Lion\Route\Attributes\Rules;
 use Lion\Security\Exceptions\AESException;
@@ -53,10 +52,15 @@ class AuthenticatorController
     ): stdClass {
         $users->capsule();
 
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        $data = [];
 
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
+
+        /** @var array<string, string> $decode */
         $decode = $aESService->decode([
-            'idusers' => $data->idusers,
+            'idusers' => $data['idusers'],
             'users_password' => $users->getUsersPassword(),
         ]);
 
@@ -81,7 +85,8 @@ class AuthenticatorController
      * @param AESService $aESService [Encrypt and decrypt data with AES]
      * @param JWTService $jWTService [Service to manipulate JWT tokens]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass
+     *
      * @throws AESException
      */
     public function qr(
@@ -90,11 +95,16 @@ class AuthenticatorController
         UsersModel $usersModel,
         AESService $aESService,
         JWTService $jWTService
-    ): stdClass|array|DatabaseCapsuleInterface {
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+    ): stdClass {
+        $data = [];
 
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
+
+        /** @var array<string, string> $aesDecode */
         $aesDecode = $aESService->decode([
-            'idusers' => $data->idusers,
+            'idusers' => $data['idusers'],
         ]);
 
         /** @var stdClass $user */
@@ -103,12 +113,26 @@ class AuthenticatorController
                 ->setIdusers((int) $aesDecode['idusers'])
         );
 
-        $qr2fa = $auth2FA->qr(env('APP_NAME'), $user->users_email);
+        $qr2fa = new stdClass();
 
-        return success(NULL_VALUE, Http::OK, (object) $aESService->encode([
-            'qr' => $qr2fa->data->qr,
-            'secret' => $qr2fa->data->secretKey,
-        ]));
+        if (is_string(env('APP_NAME')) && isset($user->users_email) && is_string($user->users_email)) {
+            $qr2fa = $auth2FA->qr(env('APP_NAME'), $user->users_email);
+        }
+
+        if (
+            isset($qr2fa->data)
+            && is_object($qr2fa->data)
+            && isset($qr2fa->data->secretKey, $qr2fa->data->qr)
+            && is_string($qr2fa->data->secretKey)
+            && is_string($qr2fa->data->qr)
+        ) {
+            return success(null, Http::OK, $aESService->encode([
+                'qr' => $qr2fa->data->qr,
+                'secret' => $qr2fa->data->secretKey,
+            ]));
+        }
+
+        return error('invalid response from qr2fa generation');
     }
 
     /**
@@ -135,10 +159,14 @@ class AuthenticatorController
     ): stdClass {
         $authenticator2FA->capsule();
 
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        $data = [];
+
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
 
         $aesDecode = $aESService->decode([
-            'idusers' => $data->idusers,
+            'idusers' => $data['idusers'],
             'users_2fa_secret' => $authenticator2FA->getUsers2faSecret(),
         ]);
 
@@ -184,10 +212,14 @@ class AuthenticatorController
     ): stdClass {
         $authenticator2FA->capsule();
 
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        $data = [];
+
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
 
         $aesDecode = $aESService->decode([
-            'idusers' => $data->idusers,
+            'idusers' => $data['idusers'],
         ]);
 
         $authenticator2FA
@@ -203,7 +235,9 @@ class AuthenticatorController
                 ->setIdusers((int) $aesDecode['idusers'])
         );
 
-        $authenticatorService->verify2FA($users_2fa->users_2fa_secret, $authenticator2FA);
+        if (isset($users_2fa->users_2fa_secret) && is_string($users_2fa->users_2fa_secret)) {
+            $authenticatorService->verify2FA($users_2fa->users_2fa_secret, $authenticator2FA);
+        }
 
         $authenticatorService->update2FA($authenticator2FA);
 

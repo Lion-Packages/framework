@@ -89,9 +89,11 @@ class PasswordManagerService
      */
     public function updatePassword(PasswordManagerModel $passwordManagerModel, PasswordManager $passwordManager): void
     {
+        $password = $this->validation->passwordHash((string) $passwordManager->getUsersPasswordConfirm());
+
         $response = $passwordManagerModel->updatePasswordDB(
             $passwordManager
-                ->setUsersPasswordConfirm($this->validation->passwordHash($passwordManager->getUsersPasswordConfirm()))
+                ->setUsersPasswordConfirm($password)
         );
 
         if (isError($response)) {

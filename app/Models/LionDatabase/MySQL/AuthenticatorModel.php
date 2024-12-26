@@ -23,7 +23,7 @@ class AuthenticatorModel
      *
      * @param Users $users [Capsule for the 'Users' entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function readUsersPasswordDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {
@@ -40,7 +40,7 @@ class AuthenticatorModel
      * @param Authenticator2FA $authenticator2FA Capsule for the
      * 'Authenticator2FA' entity
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function readCheckStatusDB(Authenticator2FA $authenticator2FA): stdClass|array|DatabaseCapsuleInterface
     {

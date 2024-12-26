@@ -58,31 +58,38 @@ class PasswordManagerController
         LoginService $loginService,
         TaskQueue $taskQueue
     ): stdClass {
-        $users
-            ->setUsersEmail(request('users_email'));
+        if (is_string(request('users_email'))) {
+            $users
+                ->setUsersEmail(request('users_email'));
 
-        $loginService->validateSession($users);
+            $loginService->validateSession($users);
 
-        /** @var stdClass $user */
-        $user = $usersModel->readUsersByEmailDB($users);
+            /** @var stdClass $user */
+            $user = $usersModel->readUsersByEmailDB($users);
 
-        $users
-            ->setUsersRecoveryCode($user->users_recovery_code);
+            if (is_string($user->users_recovery_code)) {
+                $users
+                    ->setUsersRecoveryCode($user->users_recovery_code);
+            }
 
-        $accountService->checkRecoveryCodeInactive($users);
+            $accountService->checkRecoveryCodeInactive($users);
 
-        $users
-            ->setIdusers($user->idusers)
-            ->setUsersRecoveryCode(fake()->numerify('######'));
+            if (is_int($user->idusers)) {
+                $users
+                    ->setIdusers($user->idusers);
+            }
 
-        $accountService->updateRecoveryCode($users);
+            $users->setUsersRecoveryCode(fake()->numerify('######'));
 
-        $taskQueue->push(
-            new Task(AccountService::class, 'runSendVerificationCodeEmail', [
-                'account' => $users->getUsersEmail(),
-                'code' => $users->getUsersRecoveryCode(),
-            ])
-        );
+            $accountService->updateRecoveryCode($users);
+
+            $taskQueue->push(
+                new Task(AccountService::class, 'runSendVerificationCodeEmail', [
+                    'account' => $users->getUsersEmail(),
+                    'code' => $users->getUsersRecoveryCode(),
+                ])
+            );
+        }
 
         return success('confirmation code sent, check your email inbox to see your verification code');
     }
@@ -103,7 +110,7 @@ class PasswordManagerController
      * processes for strong password verifications]
      * @param LoginService $loginService [Allows you to manage the user
      * authentication process]
-     * @var AESService $aESService [Encrypt and decrypt data with AES]
+     * @param AESService $aESService [Encrypt and decrypt data with AES]
      *
      * @return stdClass
      *
@@ -144,26 +151,28 @@ class PasswordManagerController
         ]);
 
         $passwordManagerService->comparePasswords(
-            $passwordManager
+            (string) $passwordManager
                 ->setUsersPasswordNew($decode['users_password_new'])
                 ->getUsersPasswordNew(),
-            $passwordManager
+            (string) $passwordManager
                 ->setUsersPasswordConfirm($decode['users_password_confirm'])
                 ->getUsersPasswordConfirm()
         );
 
-        $passwordManagerService->updatePassword(
-            $passwordManagerModel,
-            $passwordManager
-                ->setIdusers($data->idusers)
-                ->setUsersPasswordConfirm($decode['users_password_confirm'])
-        );
+        if (is_int($data->idusers)) {
+            $passwordManagerService->updatePassword(
+                $passwordManagerModel,
+                $passwordManager
+                    ->setIdusers($data->idusers)
+                    ->setUsersPasswordConfirm($decode['users_password_confirm'])
+            );
 
-        $accountService->updateRecoveryCode(
-            $users
-                ->setIdusers($data->idusers)
-                ->setUsersRecoveryCode()
-        );
+            $accountService->updateRecoveryCode(
+                $users
+                    ->setIdusers($data->idusers)
+                    ->setUsersRecoveryCode()
+            );
+        }
 
         return success('the recovery code is valid, your password has been updated successfully');
     }
@@ -196,11 +205,13 @@ class PasswordManagerController
     ): stdClass {
         $passwordManager->capsule();
 
-        $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        $data = [];
 
-        $decode = $aESService->decode([
-            'idusers' => $data->idusers,
-        ]);
+        if (is_string(env('RSA_URL_PATH'))) {
+            $data = $jWTService->getTokenData(env('RSA_URL_PATH'));
+        }
+
+        $decode = $aESService->decode(['idusers' => $data['idusers'],]);
 
         /** @var stdClass $users */
         $users = $passwordManagerModel->getPasswordDB(
@@ -214,16 +225,18 @@ class PasswordManagerController
             'users_password_confirm' => $passwordManager->getUsersPasswordConfirm(),
         ]);
 
-        $passwordManagerService->verifyPasswords(
-            $users->users_password,
-            $decodePassword['users_password']
-        );
+        if (is_string($users->users_password)) {
+            $passwordManagerService->verifyPasswords(
+                $users->users_password,
+                $decodePassword['users_password']
+            );
+        }
 
         $passwordManagerService->comparePasswords(
-            $passwordManager
+            (string) $passwordManager
                 ->setUsersPasswordNew($decodePassword['users_password_new'])
                 ->getUsersPasswordNew(),
-            $passwordManager
+            (string) $passwordManager
                 ->setUsersPasswordConfirm($decodePassword['users_password_confirm'])
                 ->getUsersPasswordConfirm()
         );

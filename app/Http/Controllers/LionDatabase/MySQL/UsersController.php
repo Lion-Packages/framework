@@ -16,7 +16,6 @@ use App\Rules\LionDatabase\MySQL\Users\UsersNicknameRequiredRule;
 use App\Rules\LionDatabase\MySQL\Users\UsersPasswordRule;
 use Database\Class\LionDatabase\MySQL\Users;
 use Database\Factory\LionDatabase\MySQL\UsersFactory;
-use Lion\Database\Interface\DatabaseCapsuleInterface;
 use Lion\Request\Http;
 use Lion\Request\Status;
 use Lion\Route\Attributes\Rules;
@@ -59,9 +58,9 @@ class UsersController
         $response = $usersModel->createUsersDB(
             $users
                 ->capsule()
-                ->setUsersPassword($validation->passwordHash($users->getUsersPassword()))
+                ->setUsersPassword($validation->passwordHash((string) $users->getUsersPassword()))
                 ->setUsersActivationCode(fake()->numerify('######'))
-                ->setUsersRecoveryCode(NULL_VALUE)
+                ->setUsersRecoveryCode(null)
                 ->setUsersCode(uniqid('code-'))
                 ->setUsers2fa(UsersFactory::DISABLED_2FA)
                 ->setUsers2faSecret()
@@ -85,9 +84,9 @@ class UsersController
      *
      * @param UsersModel $usersModel [Model for the Users entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return array<string, mixed>|stdClass
      */
-    public function readUsers(UsersModel $usersModel): stdClass|array|DatabaseCapsuleInterface
+    public function readUsers(UsersModel $usersModel): array|stdClass
     {
         return $usersModel->readUsersDB();
     }
@@ -99,15 +98,12 @@ class UsersController
      *
      * @param Users $users [Capsule for the 'Users' entity]
      * @param UsersModel $usersModel [Model for the Users entity]
-     * @param string $idusers [user id defined in routes]
+     * @param string $idusers [User id defined in routes]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass
      */
-    public function readUsersById(
-        Users $users,
-        UsersModel $usersModel,
-        string $idusers
-    ): stdClass|array|DatabaseCapsuleInterface {
+    public function readUsersById(Users $users, UsersModel $usersModel, string $idusers): stdClass
+    {
         return $usersModel->readUsersByIdDB(
             $users
                 ->setIdusers((int) $idusers)

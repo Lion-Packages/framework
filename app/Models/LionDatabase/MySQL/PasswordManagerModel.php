@@ -22,7 +22,7 @@ class PasswordManagerModel
      * @param PasswordManager $passwordManager [Capsule for the
      * 'PasswordManager' entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function getPasswordDB(PasswordManager $passwordManager): stdClass|array|DatabaseCapsuleInterface
     {

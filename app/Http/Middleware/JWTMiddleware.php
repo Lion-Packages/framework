@@ -156,7 +156,7 @@ class JWTMiddleware
 
         $this->validateSession($token);
 
-        if (!$token->data->session || empty($token->data->session)) {
+        if (isset($token->data) && !$token->data->session || empty($token->data->session)) {
             throw new MiddlewareException(
                 'user not logged in, you must log in',
                 Status::SESSION_ERROR,
@@ -187,7 +187,7 @@ class JWTMiddleware
 
         $this->validateSession($token);
 
-        if (!$token->data->session || empty($token->data->session)) {
+        if (isset($token->data) && !$token->data->session || empty($token->data->session)) {
             throw new MiddlewareException(
                 'user not logged in, you must log in',
                 Status::SESSION_ERROR,
@@ -218,7 +218,7 @@ class JWTMiddleware
 
         $this->validateSession($token);
 
-        if ($token->data->session) {
+        if (isset($token->data) && $token->data->session) {
             throw new MiddlewareException(
                 'user in session, you must close the session',
                 Status::SESSION_ERROR,

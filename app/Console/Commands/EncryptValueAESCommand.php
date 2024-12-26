@@ -9,10 +9,9 @@ use DI\Attribute\Inject;
 use Lion\Command\Command;
 use Lion\Security\Exceptions\AESException;
 use Symfony\Component\Console\Exception\LogicException;
-use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\Question;
 
 /**
  * It is responsible for encrypting data with AES
@@ -47,7 +46,8 @@ class EncryptValueAESCommand extends Command
     {
         $this
             ->setName('aes:encode')
-            ->setDescription('Encrypt data with AES');
+            ->setDescription('Encrypt data with AES')
+            ->addArgument('string', InputArgument::REQUIRED, 'Value');
     }
 
     /**
@@ -70,22 +70,17 @@ class EncryptValueAESCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var QuestionHelper $helper */
-        $helper = $this->getHelper('question');
+        /** @var string $value */
+        $value = $input->getArgument('string');
 
-        $value = $helper->ask($input, $output, new Question($this->warningOutput("\t>> enter a value: "), NULL_VALUE));
-
-        if (NULL_VALUE === $value) {
-            $output->writeln($this->errorOutput("\t>> you must enter a value for encryption"));
-
-            return Command::INVALID;
-        }
-
+        /** @var array<string, string> $encode */
         $encode = $this->aESService->encode([
             'value' => trim($value),
         ]);
 
-        $output->writeln($this->successOutput("\t>> {$encode['value']}"));
+        if (!empty($encode['value'])) {
+            $output->writeln($this->successOutput("\t>> {$encode['value']}"));
+        }
 
         return Command::SUCCESS;
     }

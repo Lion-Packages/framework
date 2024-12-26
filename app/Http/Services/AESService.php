@@ -41,11 +41,11 @@ class AESService
      *
      * @param array<string, string> $rows [List of data to encrypt]
      *
-     * @return array|object
+     * @return array<string, string>
      *
      * @throws AESException [If encryption fails]
      */
-    public function encode(array $rows): array|object
+    public function encode(array $rows): array
     {
         $this->aes->config([
             'passphrase' => env('AES_PASSPHRASE'),
@@ -63,11 +63,11 @@ class AESService
     /**
      * Decrypt data list with AES
      *
-     * @param array<string, string> $rows [List of data to decrypt]
+     * @param array<string, mixed> $rows [List of data to decrypt]
      *
-     * @return array|object
+     * @return array<string, string>
      */
-    public function decode(array $rows): array|object
+    public function decode(array $rows): array
     {
         return $this->aes
             ->config([

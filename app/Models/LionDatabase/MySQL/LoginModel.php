@@ -22,7 +22,7 @@ class LoginModel
      *
      * @param Users $users [Object of the Users entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function authDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {
@@ -37,7 +37,7 @@ class LoginModel
      *
      * @param Users $users [Object of the Users entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function verifyAccountActivationDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {
@@ -52,7 +52,7 @@ class LoginModel
      *
      * @param Users $users [Object of the Users entity]
      *
-     * @return stdClass|array|DatabaseCapsuleInterface
+     * @return stdClass|array<int|string, mixed>|DatabaseCapsuleInterface
      */
     public function sessionDB(Users $users): stdClass|array|DatabaseCapsuleInterface
     {

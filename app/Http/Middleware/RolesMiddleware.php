@@ -54,7 +54,7 @@ class RolesMiddleware
     /**
      * Validates if a user has access to this resource
      *
-     * @param array $roles [Allowed Roles]
+     * @param array<int, int> $roles [Allowed Roles]
      *
      * @return void
      *
@@ -65,7 +65,7 @@ class RolesMiddleware
     {
         $data = $this->jWTService->getTokenData(env('RSA_URL_PATH'));
 
-        $decode = $this->aESService->decode(['idroles' => $data->idroles]);
+        $decode = $this->aESService->decode(['idroles' => $data['idroles']]);
 
         if (!in_array((int) $decode['idroles'], $roles, true)) {
             throw new MiddlewareException(

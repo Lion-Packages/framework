@@ -59,36 +59,38 @@ class RegistrationController
         Validation $validation,
         TaskQueue $taskQueue
     ): stdClass {
-        $accountService->validateAccountExists(
-            $registrationModel,
-            $users
-                ->setUsersEmail(request('users_email'))
-        );
-
-        $decode = $aESService->decode([
-            'users_password' => request('users_password'),
-        ]);
-
-        $response = $usersModel->createUsersDB(
-            $users
-                ->setIdroles(RolesEnum::CUSTOMER->value)
-                ->setUsersName('N/A')
-                ->setUsersLastName('N/A')
-                ->setUsersNickname('N/A')
-                ->setUsersPassword($validation->passwordHash($decode['users_password']))
-                ->setUsersActivationCode(fake()->numerify('######'))
-                ->setUsersCode(uniqid('code-'))
-                ->setUsers2fa(UsersFactory::DISABLED_2FA)
-                ->setUsers2faSecret()
-        );
-
-        if (isSuccess($response)) {
-            $taskQueue->push(
-                new Task(AccountService::class, 'runSendRecoveryCodeByEmail', [
-                    'account' => $users->getUsersEmail(),
-                    'code' => $users->getUsersActivationCode(),
-                ])
+        if (is_string(request('users_email')) && is_string(request('users_password'))) {
+            $accountService->validateAccountExists(
+                $registrationModel,
+                $users
+                    ->setUsersEmail(request('users_email'))
             );
+
+            $decode = $aESService->decode([
+                'users_password' => request('users_password'),
+            ]);
+
+            $response = $usersModel->createUsersDB(
+                $users
+                    ->setIdroles(RolesEnum::CUSTOMER->value)
+                    ->setUsersName('N/A')
+                    ->setUsersLastName('N/A')
+                    ->setUsersNickname('N/A')
+                    ->setUsersPassword($validation->passwordHash($decode['users_password']))
+                    ->setUsersActivationCode(fake()->numerify('######'))
+                    ->setUsersCode(uniqid('code-'))
+                    ->setUsers2fa(UsersFactory::DISABLED_2FA)
+                    ->setUsers2faSecret()
+            );
+
+            if (isSuccess($response)) {
+                $taskQueue->push(
+                    new Task(AccountService::class, 'runSendRecoveryCodeByEmail', [
+                        'account' => $users->getUsersEmail(),
+                        'code' => $users->getUsersActivationCode(),
+                    ])
+                );
+            }
         }
 
         return success('user successfully registered, check your mailbox to obtain the account activation code');
@@ -118,20 +120,24 @@ class RegistrationController
         RegistrationService $registrationService,
         AccountService $accountService
     ): stdClass {
-        /** @var stdClass $data */
-        $data = $registrationModel->verifyAccountDB(
-            $users
-                ->setUsersEmail(request('users_email'))
-                ->setUsersActivationCode(request('users_activation_code'))
-        );
+        if (is_string(request('users_email')) && is_string(request('users_activation_code'))) {
+            /** @var Users|stdClass $user */
+            $user = $registrationModel->verifyAccountDB(
+                $users
+                    ->setUsersEmail(request('users_email'))
+                    ->setUsersActivationCode(request('users_activation_code'))
+            );
 
-        $registrationService->verifyAccount($users, $data);
+            $registrationService->verifyAccount($users, $user);
 
-        $accountService->updateActivationCode(
-            $users
-                ->setUsersActivationCode(NULL_VALUE)
-                ->setIdusers($data->idusers)
-        );
+            if ($user instanceof Users) {
+                $accountService->updateActivationCode(
+                    $users
+                        ->setUsersActivationCode()
+                        ->setIdusers($user->getIdusers())
+                );
+            }
+        }
 
         return success('user account has been successfully verified');
     }

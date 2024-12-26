@@ -1,6 +1,9 @@
 name: Lion-Framework (CI Workflow)
 
 on:
+  push:
+    branches:
+      - actions
   pull_request:
     branches:
       - main
@@ -16,6 +19,14 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -25,16 +36,40 @@ jobs:
       - name: Composer Validate
         run: composer validate --strict
 
+      - name: Composer Check for vulnerabilities
+        run: composer audit --locked
+
       - name: Composer Install
         run: composer install
 
       - name: Composer Dump-Autoload
         run: composer dump-autoload --optimize --strict-psr
 
+  docker-validation:
+    runs-on: ubuntu-latest
+    name: Docker Validation
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config
+
   code-analyze:
     runs-on: ubuntu-latest
     name: PHP Code Analyze
-    needs: composer-validation
+    needs:
+      - composer-validation
+      - docker-validation
 
     steps:
       - name: Check out the repository
@@ -49,45 +84,28 @@ jobs:
       - name: Composer Install
         run: composer install
 
-      - name: PHP Code Snifer (App)
+      - name: PHP CodeSnifer (App)
         run: php vendor/bin/phpcs --standard=PSR12 app/
 
-      - name: PHP Code Snifer (Database)
+      - name: PHPStan (App)
+        run: php -d memory_limit=-1 vendor/bin/phpstan analyse app
+
+      - name: PHP CodeSnifer (Database)
         run: php vendor/bin/phpcs --standard=PSR12 database/
 
-      - name: PHP Code Snifer (Tests)
+      - name: PHPStan (Database)
+        run: php -d memory_limit=-1 vendor/bin/phpstan analyse database
+
+      - name: PHP CodeSnifer (Tests)
         run: php vendor/bin/phpcs --standard=PSR12 --ignore=tests/build/\*,tests/bootstrap.php --colors tests/
+
+      - name: PHPStan (Tests)
+        run: php -d memory_limit=-1 vendor/bin/phpstan analyse tests
 
   tests:
     runs-on: ubuntu-latest
-    name: "PHP Tests"
+    name: PHP Tests
     needs: code-analyze
-
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_ROOT_PASSWORD: lion
-          MYSQL_DATABASE: lion_database
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --host=localhost --password=$MYSQL_ROOT_PASSWORD"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-
-      redis:
-        image: redis:6
-        ports:
-          - 6379:6379
-
-      mailhog:
-        image: mailhog/mailhog
-        ports:
-          - 8025:8025
-          - 1025:1025
 
     steps:
       - name: Checkout repository
@@ -95,14 +113,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
 
       - name: Stop MySQL
         run: sudo systemctl stop mysql

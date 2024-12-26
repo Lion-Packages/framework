@@ -8,6 +8,7 @@ use App\Exceptions\AuthenticationException;
 use Database\Class\LionDatabase\MySQL\Users;
 use Lion\Request\Http;
 use Lion\Request\Status;
+use stdClass;
 
 /**
  * Service that assists the user registration process
@@ -20,16 +21,16 @@ class RegistrationService
      * Check and validate if the account verification code is correct
      *
      * @param Users $users [Capsule for the 'Users' entity]
-     * @param object $data [Account verification code]
+     * @param Users|stdClass $user [Object to check if the user code is correct]
      *
      * @return void
      *
      * @throws AuthenticationException [Throws an error if the verification code
      * has no matches]
      */
-    public function verifyAccount(Users $users, object $data): void
+    public function verifyAccount(Users $users, Users|stdClass $user): void
     {
-        if (isSuccess($data)) {
+        if ($user instanceof stdClass && isSuccess($user)) {
             throw new AuthenticationException(
                 'verification code is invalid [ERR-1]',
                 Status::SESSION_ERROR,
@@ -37,7 +38,7 @@ class RegistrationService
             );
         }
 
-        if ($data->users_activation_code != $users->getUsersActivationCode()) {
+        if ($user instanceof Users && $user->getUsersActivationCode() != $users->getUsersActivationCode()) {
             throw new AuthenticationException(
                 'verification code is invalid [ERR-2]',
                 Status::SESSION_ERROR,
